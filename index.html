@@ -7,13 +7,321 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poiret+One&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #e0e0e0;
+            background-color: #121212;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        header h1 {
+            margin-bottom: 10px;
+            color: #f0f0f0;
+            font-family: 'Poiret One', cursive;
+            font-size: 3.5rem;
+            letter-spacing: 3px;
+            font-weight: 400;
+            text-shadow: 0 0 10px rgba(138, 43, 226, 0.7);
+        }
+        
+        header p {
+            color: #aaa;
+            font-size: 1.1rem;
+        }
+        
+        .upload-container {
+            max-width: 600px;
+            margin: 0 auto 40px;
+            background-color: #202020;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .upload-container h2 {
+            margin-bottom: 15px;
+            color: #f0f0f0;
+        }
+        
+        .upload-form {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .file-input-wrapper {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .file-input-label {
+            display: block;
+            background-color: #333;
+            color: white;
+            padding: 12px;
+            border-radius: 6px;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .file-input-label:hover {
+            background-color: #444;
+        }
+        
+        #imageFile {
+            position: absolute;
+            left: -9999px;
+        }
+        
+        #fileName {
+            margin-top: 8px;
+            font-size: 14px;
+            color: #aaa;
+        }
+        
+        #uploadButton {
+            padding: 12px;
+            background-color: #8a2be2;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        #uploadButton:hover {
+            background-color: #9d45e3;
+        }
+        
+        #uploadButton:disabled {
+            background-color: #555;
+            cursor: not-allowed;
+        }
+        
+        .gallery-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            grid-gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .gallery-item {
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            height: 200px;
+            background-color: #2a2a2a;
+        }
+        
+        .gallery-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(138, 43, 226, 0.3);
+        }
+        
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: filter 0.3s ease;
+        }
+        
+        .gallery-item:hover img {
+            filter: brightness(1.1);
+        }
+        
+        .gallery-item .url-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            font-size: 14px;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .gallery-item:hover .url-overlay {
+            opacity: 1;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+        }
+        
+        .modal-content {
+            background-color: #202020;
+            margin: 10% auto;
+            padding: 25px;
+            border-radius: 8px;
+            max-width: 600px;
+            box-shadow: 0 5px 25px rgba(138, 43, 226, 0.4);
+            border: 1px solid #333;
+        }
+        
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close-button:hover {
+            color: #fff;
+        }
+        
+        h2 {
+            margin-bottom: 20px;
+            color: #e0e0e0;
+        }
+        
+        .url-container {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        
+        .url-container input {
+            flex-grow: 1;
+            padding: 10px;
+            background-color: #333;
+            color: #fff;
+            border: 1px solid #444;
+            border-radius: 4px 0 0 4px;
+            font-size: 14px;
+        }
+        
+        .url-container button {
+            padding: 10px 15px;
+            background-color: #8a2be2;
+            color: white;
+            border: none;
+            border-radius: 0 4px 4px 0;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+        
+        .url-container button:hover {
+            background-color: #9d45e3;
+        }
+        
+        .preview-container {
+            text-align: center;
+        }
+        
+        .preview-container img {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+        
+        #uploadProgress {
+            height: 5px;
+            margin-top: 10px;
+            background-color: #333;
+            border-radius: 3px;
+            overflow: hidden;
+            display: none;
+        }
+        
+        #progressBar {
+            height: 100%;
+            background-color: #8a2be2;
+            width: 0;
+            transition: width 0.3s ease;
+        }
+        
+        .status-message {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #aaa;
+        }
+        
+        .success-message {
+            color: #4caf50;
+        }
+        
+        .error-message {
+            color: #f44336;
+        }
+        
+        footer {
+            margin-top: 30px;
+            text-align: center;
+            color: #777;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 600px) {
+            .gallery-container {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+            
+            .gallery-item {
+                height: 150px;
+            }
+            
+            .modal-content {
+                margin: 15% auto;
+                padding: 15px;
+                width: 90%;
+            }
+            
+            header h1 {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
 </head>
 <body>
     <header>
         <h1>photoshack</h1>
-        <p>click any image to get its url</p>
+        <p>upload & share images instantly</p>
     </header>
+
+    <div class="upload-container">
+        <h2>Upload an Image</h2>
+        <div class="upload-form">
+            <div class="file-input-wrapper">
+                <label for="imageFile" class="file-input-label">Choose an image</label>
+                <input type="file" id="imageFile" accept="image/*">
+                <div id="fileName"></div>
+            </div>
+            <button id="uploadButton" disabled>Upload Image</button>
+            <div id="uploadProgress">
+                <div id="progressBar"></div>
+            </div>
+            <div id="statusMessage" class="status-message"></div>
+        </div>
+    </div>
 
     <main>
         <div id="gallery" class="gallery-container"></div>
@@ -34,9 +342,182 @@
     </main>
 
     <footer>
-        <p>Upload images directly to your repository to display them here</p>
+        <p>Images uploaded using anonymous Imgur hosting</p>
     </footer>
     
-    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const gallery = document.getElementById('gallery');
+            const modal = document.getElementById('urlModal');
+            const closeButton = document.querySelector('.close-button');
+            const imageUrlInput = document.getElementById('imageUrl');
+            const copyButton = document.getElementById('copyButton');
+            const previewImage = document.getElementById('previewImage');
+            
+            // Imgur API client ID - replace with your own if you register
+            const IMGUR_CLIENT_ID = '6fff14be41ad790';
+            
+            // Upload form elements
+            const imageFileInput = document.getElementById('imageFile');
+            const fileNameDisplay = document.getElementById('fileName');
+            const uploadButton = document.getElementById('uploadButton');
+            const uploadProgress = document.getElementById('uploadProgress');
+            const progressBar = document.getElementById('progressBar');
+            const statusMessage = document.getElementById('statusMessage');
+            
+            // Handle file selection
+            imageFileInput.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    fileNameDisplay.textContent = this.files[0].name;
+                    uploadButton.disabled = false;
+                } else {
+                    fileNameDisplay.textContent = '';
+                    uploadButton.disabled = true;
+                }
+            });
+            
+            // Handle image upload
+            uploadButton.addEventListener('click', function() {
+                if (!imageFileInput.files || !imageFileInput.files[0]) return;
+                
+                const file = imageFileInput.files[0];
+                
+                // Show progress bar
+                uploadProgress.style.display = 'block';
+                progressBar.style.width = '0%';
+                statusMessage.textContent = 'Uploading...';
+                statusMessage.className = 'status-message';
+                uploadButton.disabled = true;
+                
+                // Create FormData
+                const formData = new FormData();
+                formData.append('image', file);
+                
+                // Upload to Imgur
+                fetch('https://api.imgur.com/3/image', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Client-ID ' + IMGUR_CLIENT_ID
+                    },
+                    body: formData,
+                    mode: 'cors'
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Upload failed with status: ' + response.status);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Upload successful
+                    progressBar.style.width = '100%';
+                    statusMessage.textContent = 'Upload successful!';
+                    statusMessage.className = 'status-message success-message';
+                    
+                    // Add the image to the gallery
+                    if (data.data && data.data.link) {
+                        addImageToGallery(data.data.link);
+                        
+                        // Save to localStorage
+                        saveImageToLocalStorage(data.data.link);
+                        
+                        // Reset form
+                        imageFileInput.value = '';
+                        fileNameDisplay.textContent = '';
+                    }
+                    
+                    // Enable upload button again
+                    setTimeout(() => {
+                        uploadButton.disabled = false;
+                    }, 1000);
+                })
+                .catch(error => {
+                    console.error('Upload error:', error);
+                    progressBar.style.width = '0%';
+                    statusMessage.textContent = 'Upload failed: ' + error.message;
+                    statusMessage.className = 'status-message error-message';
+                    uploadButton.disabled = false;
+                });
+            });
+            
+            // Add image to gallery
+            function addImageToGallery(imageUrl) {
+                const item = document.createElement('div');
+                item.className = 'gallery-item';
+                
+                const img = document.createElement('img');
+                img.src = imageUrl;
+                img.alt = 'Uploaded image';
+                
+                const urlOverlay = document.createElement('div');
+                urlOverlay.className = 'url-overlay';
+                urlOverlay.textContent = 'Click to copy URL';
+                
+                item.appendChild(img);
+                item.appendChild(urlOverlay);
+                
+                // Insert at the beginning of the gallery
+                if (gallery.firstChild) {
+                    gallery.insertBefore(item, gallery.firstChild);
+                } else {
+                    gallery.appendChild(item);
+                }
+                
+                // Add click event to show URL
+                item.addEventListener('click', function() {
+                    imageUrlInput.value = imageUrl;
+                    previewImage.src = imageUrl;
+                    previewImage.alt = 'Uploaded image';
+                    modal.style.display = 'block';
+                });
+            }
+            
+            // Save image URL to localStorage
+            function saveImageToLocalStorage(imageUrl) {
+                const savedImages = JSON.parse(localStorage.getItem('photoshackImages') || '[]');
+                savedImages.unshift(imageUrl); // Add to beginning of array
+                localStorage.setItem('photoshackImages', JSON.stringify(savedImages));
+            }
+            
+            // Load saved images from localStorage
+            function loadSavedImages() {
+                const savedImages = JSON.parse(localStorage.getItem('photoshackImages') || '[]');
+                if (savedImages.length > 0) {
+                    savedImages.forEach(imageUrl => {
+                        addImageToGallery(imageUrl);
+                    });
+                }
+            }
+            
+            // Modal functionality
+            closeButton.addEventListener('click', function() {
+                modal.style.display = 'none';
+            });
+            
+            window.addEventListener('click', function(event) {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+            
+            // Copy URL to clipboard
+            copyButton.addEventListener('click', function() {
+                imageUrlInput.select();
+                document.execCommand('copy');
+                
+                const originalText = copyButton.textContent;
+                copyButton.textContent = 'Copied!';
+                copyButton.style.backgroundColor = '#6a0dad';
+                
+                setTimeout(function() {
+                    copyButton.textContent = originalText;
+                    copyButton.style.backgroundColor = '#8a2be2';
+                }, 1500);
+            });
+            
+            // Load saved images when page loads
+            loadSavedImages();
+        });
+    </script>
 </body>
 </html>
