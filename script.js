@@ -10,96 +10,119 @@ document.addEventListener('DOMContentLoaded', function() {
     const repoName = window.location.pathname.split('/')[1];
     const username = window.location.hostname.split('.')[0];
     
-    // Function to load images from the /images directory
+    // Common image file extensions
+    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.svg'];
+    
+    // Function to check if a filename has an image extension
+    function isImageFile(filename) {
+        filename = filename.toLowerCase();
+        return imageExtensions.some(ext => filename.endsWith(ext));
+    }
+    
+    // Function to load images directly from the repository root
     async function loadImages() {
         try {
-            // This is where you'd normally fetch a list of images
-            // Since GitHub Pages doesn't support server-side directory listing,
-            // we'll use a workaround by loading images from a known list or pattern
-            
-            // Example: if you know you're going to name images sequentially
-            // or you could maintain a list of image names in a separate JSON file
-            
-            // For demonstration, let's assume we're checking for images in the /images directory
-            const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
-            
-            // For demonstration, I'll check if certain files exist
-            // In a real implementation, you might want to create a JSON file listing all images
-            // For now, we'll just try to load from a range of potential file names
-            
-            checkImagesInDirectory('images');
-            
+            // Since GitHub Pages can't list directory contents dynamically,
+            // we'll scan for any files matching image extensions
+            scanRepository();
         } catch (error) {
             console.error('Error loading images:', error);
-            gallery.innerHTML = '<p class="error">Error loading images. Make sure you have images in the /images directory.</p>';
+            gallery.innerHTML = '<p class="empty-message">Error loading images. Try refreshing the page.</p>';
         }
     }
     
-    // Check for images in a specific directory
-    function checkImagesInDirectory(dirPath) {
-        // This is a placeholder for demonstration
-        // In a real implementation, you could use a JSON file that lists all images
-        // or implement a naming convention
+    // Function to scan the repository for images
+    function scanRepository() {
+        // This is a placeholder for demonstration - in a real implementation,
+        // you'd need to manually keep track of images in a JSON file or use a specific pattern
         
-        // For this example, I'll create a few sample elements
-        const sampleImages = [
-            { name: 'sample1.jpg', path: `${dirPath}/sample1.jpg` },
-            { name: 'sample2.jpg', path: `${dirPath}/sample2.jpg` },
-            { name: 'example.png', path: `${dirPath}/example.png` }
-        ];
+        // Create a placeholder message
+        gallery.innerHTML = '<p class="empty-message">Scanning for images in repository...</p>';
         
-        // Clear the gallery first
-        gallery.innerHTML = '';
+        // Attempt to load some common image filename patterns
+        const imagesToCheck = [];
         
-        // Create a placeholder message for empty gallery
-        if (sampleImages.length === 0) {
-            const placeholder = document.createElement('div');
-            placeholder.className = 'placeholder';
-            placeholder.innerHTML = `
-                <p>No images found in the repository.</p>
-                <p>Add images to the <code>/images</code> folder to see them here.</p>
-            `;
-            gallery.appendChild(placeholder);
-            return;
+        // Try to detect any images by testing a variety of common names
+        // This is just a demo approach - in reality, GitHub Pages can't enumerate files
+        for (let i = 1; i <= 10; i++) {
+            imagesToCheck.push(`image${i}.jpg`);
+            imagesToCheck.push(`photo${i}.jpg`);
+            imagesToCheck.push(`img${i}.jpg`);
+            imagesToCheck.push(`picture${i}.png`);
         }
         
-        // Add all images to the gallery
-        sampleImages.forEach(img => {
-            createImageElement(img.name, img.path);
+        // Check for some common names
+        imagesToCheck.push('profile.jpg', 'banner.jpg', 'logo.png', 'background.jpg');
+        
+        // Create a counter to keep track of loaded images
+        let loadedImages = 0;
+        let checkedImages = 0;
+        
+        // Clear gallery before checking
+        gallery.innerHTML = '';
+        
+        // Check each potential image
+        imagesToCheck.forEach(filename => {
+            const img = new Image();
+            img.onload = function() {
+                // Image exists, add it to gallery
+                createImageElement(filename, filename);
+                loadedImages++;
+                updateStatus(loadedImages, checkedImages, imagesToCheck.length);
+            };
+            img.onerror = function() {
+                // Image doesn't exist or can't be loaded
+                checkedImages++;
+                updateStatus(loadedImages, checkedImages, imagesToCheck.length);
+            };
+            img.src = filename;
         });
         
-        // Add a note about these being sample images
-        const note = document.createElement('div');
-        note.className = 'note';
-        note.style.gridColumn = '1 / -1';
-        note.style.padding = '10px';
-        note.style.backgroundColor = '#fffbea';
-        note.style.borderRadius = '5px';
-        note.style.marginTop = '20px';
-        note.innerHTML = `
-            <strong>Note:</strong> These are sample images. For this to work with your own images:
-            <ul style="margin-left: 20px; margin-top: 5px;">
-                <li>Create an <code>images</code> folder in your repository</li>
-                <li>Add your images to that folder</li>
-                <li>The images will appear here with their actual URLs</li>
-            </ul>
-        `;
-        gallery.appendChild(note);
+        // Update status and show message if no images found
+        function updateStatus(loaded, checked, total) {
+            if (checked + loaded === total && loaded === 0) {
+                gallery.innerHTML = '<p class="empty-message">No images found in the repository.<br>Upload some image files to your repository root to display them here.</p>';
+            }
+        }
+        
+        // Try to detect any other image files that might be in the repository
+        // This is an additional step to check for images with file extensions
+        fetch('.')
+            .then(response => response.text())
+            .then(html => {
+                // This is a hack that tries to extract filenames from the HTML
+                // Won't work reliably, but might catch some files in simple repositories
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const links = doc.querySelectorAll('a');
+                
+                links.forEach(link => {
+                    const href = link.getAttribute('href');
+                    if (href && isImageFile(href)) {
+                        const img = new Image();
+                        img.onload = function() {
+                            createImageElement(href, href);
+                        };
+                        img.src = href;
+                    }
+                });
+            })
+            .catch(error => console.log('Could not scan repository files'));
     }
     
     // Create an image element in the gallery
     function createImageElement(filename, path) {
+        // Check if this image already exists in the gallery
+        if (document.querySelector(`.gallery-item img[src="${path}"]`)) {
+            return; // Skip duplicates
+        }
+        
         const item = document.createElement('div');
         item.className = 'gallery-item';
         
         const img = document.createElement('img');
         img.src = path;
         img.alt = filename;
-        img.onerror = function() {
-            // If image fails to load, display a placeholder
-            img.src = 'https://via.placeholder.com/250x200?text=Image+Not+Found';
-            img.alt = 'Image not found';
-        };
         
         const filenameElement = document.createElement('div');
         filenameElement.className = 'filename';
@@ -140,11 +163,11 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const originalText = copyButton.textContent;
         copyButton.textContent = 'Copied!';
-        copyButton.style.backgroundColor = '#27ae60';
+        copyButton.style.backgroundColor = '#6a0dad';
         
         setTimeout(function() {
             copyButton.textContent = originalText;
-            copyButton.style.backgroundColor = '#3498db';
+            copyButton.style.backgroundColor = '#8a2be2';
         }, 1500);
     });
     
