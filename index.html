@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Image Gallery</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>My GitHub Image Gallery</h1>
+        <p>Click on any image to view its full URL</p>
+    </header>
+
+    <main>
+        <div id="gallery" class="gallery-container"></div>
+        
+        <div id="urlModal" class="modal">
+            <div class="modal-content">
+                <span class="close-button">&times;</span>
+                <h2>Image URL</h2>
+                <div class="url-container">
+                    <input type="text" id="imageUrl" readonly>
+                    <button id="copyButton">Copy URL</button>
+                </div>
+                <div class="preview-container">
+                    <img id="previewImage" src="" alt="Preview">
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>Add images to the <code>/images</code> folder in your repository to display them here.</p>
+    </footer>
+    
+    <script src="script.js"></script>
+</body>
+</html>
