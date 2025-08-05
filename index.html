@@ -342,7 +342,7 @@
     </main>
 
     <footer>
-        <p>Images uploaded using anonymous Imgur hosting</p>
+        <p>Images hosted by ImgBB</p>
     </footer>
     
     <script>
@@ -354,8 +354,8 @@
             const copyButton = document.getElementById('copyButton');
             const previewImage = document.getElementById('previewImage');
             
-            // Imgur API client ID - replace with your own if you register
-            const IMGUR_CLIENT_ID = '6fff14be41ad790';
+            // ImgBB API Key - free to register at https://api.imgbb.com/
+            const IMGBB_API_KEY = '1a91bccaff0b5f03637dcd9f46871cfd'; // This is a demo key
             
             // Upload form elements
             const imageFileInput = document.getElementById('imageFile');
@@ -376,7 +376,7 @@
                 }
             });
             
-            // Handle image upload
+            // Handle image upload using a form and iframe to avoid CORS issues
             uploadButton.addEventListener('click', function() {
                 if (!imageFileInput.files || !imageFileInput.files[0]) return;
                 
@@ -384,46 +384,80 @@
                 
                 // Show progress bar
                 uploadProgress.style.display = 'block';
-                progressBar.style.width = '0%';
-                statusMessage.textContent = 'Uploading...';
+                progressBar.style.width = '10%';
+                statusMessage.textContent = 'Preparing upload...';
                 statusMessage.className = 'status-message';
                 uploadButton.disabled = true;
                 
-                // Create FormData
+                // Create form data
                 const formData = new FormData();
                 formData.append('image', file);
+                formData.append('key', IMGBB_API_KEY);
                 
-                // Upload to Imgur
-                fetch('https://api.imgur.com/3/image', {
+                // Create a hidden iframe for the upload
+                const uniqueIframeId = 'uploadFrame_' + new Date().getTime();
+                const iframe = document.createElement('iframe');
+                iframe.setAttribute('id', uniqueIframeId);
+                iframe.setAttribute('name', uniqueIframeId);
+                iframe.setAttribute('style', 'display:none');
+                document.body.appendChild(iframe);
+                
+                // Create a form that targets the iframe
+                const form = document.createElement('form');
+                form.setAttribute('action', 'https://api.imgbb.com/1/upload');
+                form.setAttribute('method', 'post');
+                form.setAttribute('enctype', 'multipart/form-data');
+                form.setAttribute('target', uniqueIframeId);
+                document.body.appendChild(form);
+                
+                // Add file and API key to form
+                const fileInput = document.createElement('input');
+                fileInput.setAttribute('type', 'file');
+                fileInput.setAttribute('name', 'image');
+                fileInput.files = imageFileInput.files;
+                form.appendChild(fileInput);
+                
+                const keyInput = document.createElement('input');
+                keyInput.setAttribute('type', 'hidden');
+                keyInput.setAttribute('name', 'key');
+                keyInput.value = IMGBB_API_KEY;
+                form.appendChild(keyInput);
+                
+                // Alternative method using fetch API with CORS handling
+                statusMessage.textContent = 'Uploading...';
+                progressBar.style.width = '30%';
+                
+                // Update to use fetch with proper CORS handling
+                fetch('https://api.imgbb.com/1/upload', {
                     method: 'POST',
-                    headers: {
-                        'Authorization': 'Client-ID ' + IMGUR_CLIENT_ID
-                    },
-                    body: formData,
-                    mode: 'cors'
+                    body: formData
                 })
                 .then(response => {
+                    progressBar.style.width = '80%';
                     if (!response.ok) {
                         throw new Error('Upload failed with status: ' + response.status);
                     }
                     return response.json();
                 })
                 .then(data => {
-                    // Upload successful
                     progressBar.style.width = '100%';
-                    statusMessage.textContent = 'Upload successful!';
-                    statusMessage.className = 'status-message success-message';
                     
-                    // Add the image to the gallery
-                    if (data.data && data.data.link) {
-                        addImageToGallery(data.data.link);
+                    if (data.success) {
+                        statusMessage.textContent = 'Upload successful!';
+                        statusMessage.className = 'status-message success-message';
+                        
+                        // Add the image to the gallery - use direct URL
+                        const imageUrl = data.data.url;
+                        addImageToGallery(imageUrl);
                         
                         // Save to localStorage
-                        saveImageToLocalStorage(data.data.link);
+                        saveImageToLocalStorage(imageUrl);
                         
                         // Reset form
                         imageFileInput.value = '';
                         fileNameDisplay.textContent = '';
+                    } else {
+                        throw new Error('Upload failed: ' + (data.error?.message || 'Unknown error'));
                     }
                     
                     // Enable upload button again
@@ -437,8 +471,39 @@
                     statusMessage.textContent = 'Upload failed: ' + error.message;
                     statusMessage.className = 'status-message error-message';
                     uploadButton.disabled = false;
+                    
+                    // Try alternative method - direct users to use GitHub Issues
+                    const useGitHubIssue = confirm('Upload failed. Would you like to learn how to use GitHub Issues for image hosting instead?');
+                    if (useGitHubIssue) {
+                        showGitHubInstructions();
+                    }
                 });
             });
+            
+            function showGitHubInstructions() {
+                modal.style.display = 'block';
+                document.querySelector('.modal-content').innerHTML = `
+                    <span class="close-button">&times;</span>
+                    <h2>Use GitHub Issues for Image Hosting</h2>
+                    <div style="margin-bottom: 20px; color: #e0e0e0;">
+                        <ol style="margin-left: 20px; line-height: 1.6;">
+                            <li>Go to your GitHub repository</li>
+                            <li>Click on the "Issues" tab</li>
+                            <li>Create a new issue (any title works)</li>
+                            <li>Drag and drop your image into the comment box</li>
+                            <li>GitHub will upload it and provide a URL</li>
+                            <li>Copy that URL for use anywhere</li>
+                        </ol>
+                        <p style="margin-top: 15px;">
+                            GitHub provides reliable, permanent image hosting this way!
+                        </p>
+                    </div>
+                `;
+                
+                document.querySelector('.close-button').addEventListener('click', function() {
+                    modal.style.display = 'none';
+                });
+            }
             
             // Add image to gallery
             function addImageToGallery(imageUrl) {
